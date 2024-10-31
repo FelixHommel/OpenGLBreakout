@@ -12,9 +12,41 @@ set(GLFW_BUILD_DOCS OFF)
 set(GLM_ENABLE_CXX_17 ON)
 set(GLM_ENABLE_FAST_MATH ON)
 
-set(IRRKLANG_DIR ~/irrKlang)
-set(IRRKLANG_INCLUDE_DIR ${IRRKLANG_DIR}/include)
-set(IRRKLANG_LIB_DIR ${IRRKLANG_DIR}/bin/linux-gcc-64)
+#Because irrKlang is only distributed in binaries, the file to link differs between Linux and Windows
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    set(IRRKLANG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/dependencies/irrKlang/include")
+    set(IRRKLANG_LIB_DIR "${CMAKE_SOURCE_DIR}/dependencies/irrKlang/bin/linux-gcc-64")
+
+    find_path(
+        IRRKLANG_INCLUDE_DIR irrKlang.h PATHS
+        ${IRRKLANG_INCLUDE_DIR} 
+        DOC "Path to irrKlang headers on Linux"
+    )
+    find_library(
+        IRRKLANG_LIBRARY NAMES irrKlang.lib PATHS
+        ${IRRKLANG_LIB_DIR}
+        DOC "Path to irrKlang library on Linux"
+    )
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    set(IRRKLANG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/dependencies/irrKlang/include")
+    set(IRRKLANG_LIB_DIR "${CMAKE_SOURCE_DIR}/dependencies/irrKlang/lib/Winx64-VisualStudio")
+
+    find_path(
+        IRRKLANG_INCLUDE_DIR irrKlang.h PATHS
+        ${IRRKLANG_INCLUDE_DIR} 
+        DOC "Path to irrKlang headers on Windows"
+    )
+    find_library(
+        IRRKLANG_LIBRARY NAMES irrKlang.lib PATHS
+        ${IRRKLANG_LIB_DIR}
+        DOC "Path to irrKlang library on Windows"
+    )
+endif()
+
+#Verify that there was some file found to link
+if (NOT IRRKLANG_INCLUDE_DIR OR NOT IRRKLANG_LIBRARY)
+    message(FATAL_ERROR "irrKlang not found. Make sure the headers and libraries are installed in a known location.")
+endif()
 
 set(IMGUI_DIR dependencies/imgui)
 set(IMGUI_SOURCES
@@ -51,7 +83,7 @@ add_subdirectory(dependencies/glm)
 target_link_libraries(${PROJECT_NAME}
     OpenGL::GL
     glfw
-    ${IRRKLANG_LIB_DIR}/libIrrKlang.so
+    ${IRRKLANG_LIBRARY}
 )
 
 target_sources(${PROJECT_NAME} PRIVATE
