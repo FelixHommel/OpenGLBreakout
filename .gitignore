@@ -12,11 +12,6 @@
 *.gch
 *.pch
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
 # Fortran module files
 *.mod
 *.smod
@@ -25,7 +20,6 @@
 *.lai
 *.la
 *.a
-*.lib
 
 # Executables
 *.exe
@@ -51,3 +45,6 @@ build
 
 ### imgui ##
 imgui.ini
+
+### cache ###
+.cache
