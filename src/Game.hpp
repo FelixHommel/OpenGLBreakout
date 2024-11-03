@@ -4,9 +4,8 @@
 #include "glad/include/glad/gl.h"
 #include "glfw/include/GLFW/glfw3.h"
 #include <irrKlang.h>
-#include "imgui/imgui.h"
-#include "imgui/backends/imgui_impl_glfw.h"
-#include "imgui/backends/imgui_impl_opengl3.h"
+#include "freetype/include/ft2build.h"
+#include FT_FREETYPE_H
 
 #include "utility/SpriteRenderer.hpp"
 #include "utility/ResourceManager.hpp"
@@ -44,7 +43,7 @@ class Game
         Game(unsigned int windowWidth, unsigned int windowHeight);
         ~Game();
 
-        void init(GLFWwindow* window);
+        void init();
 
         void processInput(float dt);
         inline void setKeyPressed(int key) { m_keys.at(key) = true; }
@@ -65,6 +64,7 @@ class Game
         ParticleGenerator* m_particles;
         PostProcessor* m_postProcessor;
         irrklang::ISoundEngine* m_soundEngine;
+        FT_Library m_ft;
 
         std::vector<GameLevel> m_levels;
         unsigned int m_currentLevel;
@@ -75,7 +75,6 @@ class Game
         void resetPlayer();
 
         void checkCollisions();
-        void renderTransparentTextField(const char* label, char* buffer, size_t bufferSize);
 };
 
 #endif //!GAME_HPP

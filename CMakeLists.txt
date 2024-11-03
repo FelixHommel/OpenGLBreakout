@@ -12,11 +12,23 @@ set(GLFW_BUILD_DOCS OFF)
 set(GLM_ENABLE_CXX_17 ON)
 set(GLM_ENABLE_FAST_MATH ON)
 
-#Because irrKlang is only distributed in binaries, the file to link differs between Linux and Windows
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    set(IRRKLANG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/dependencies/irrKlang/include")
-    set(IRRKLANG_LIB_DIR "${CMAKE_SOURCE_DIR}/dependencies/irrKlang/bin/linux-gcc-64")
+set(IRRKLANG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/dependencies/irrKlang/include")
+set(IRRKLANG_LIB_DIR
+    "${CMAKE_SOURCE_DIR}/dependencies/irrKlang/bin/linux-gcc-64"
+    "${CMAKE_SOURCE_DIR}/dependencies/irrKlang/lib/Winx64-visualStudio")
 
+if(UNIX)
+    find_path(
+        IRRKLANG_INCLUDE_DIR irrKlang.h PATHS
+        ${IRRKLANG_INCLUDE_DIR} 
+        DOC "Path to irrKlang headers on Linux"
+    )
+    find_library(
+        IRRKLANG_LIBRARY NAMES irrKlang.so PATHS
+        ${IRRKLANG_LIB_DIR}
+        DOC "Path to irrKlang library on Linux"
+    )
+elseif(WIN32)
     find_path(
         IRRKLANG_INCLUDE_DIR irrKlang.h PATHS
         ${IRRKLANG_INCLUDE_DIR} 
@@ -27,20 +39,6 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
         ${IRRKLANG_LIB_DIR}
         DOC "Path to irrKlang library on Linux"
     )
-elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    set(IRRKLANG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/dependencies/irrKlang/include")
-    set(IRRKLANG_LIB_DIR "${CMAKE_SOURCE_DIR}/dependencies/irrKlang/lib/Winx64-VisualStudio")
-
-    find_path(
-        IRRKLANG_INCLUDE_DIR irrKlang.h PATHS
-        ${IRRKLANG_INCLUDE_DIR} 
-        DOC "Path to irrKlang headers on Windows"
-    )
-    find_library(
-        IRRKLANG_LIBRARY NAMES irrKlang.lib PATHS
-        ${IRRKLANG_LIB_DIR}
-        DOC "Path to irrKlang library on Windows"
-    )
 endif()
 
 #Verify that there was some file found to link
@@ -48,21 +46,8 @@ if (NOT IRRKLANG_INCLUDE_DIR OR NOT IRRKLANG_LIBRARY)
     message(FATAL_ERROR "irrKlang not found. Make sure the headers and libraries are installed in a known location.")
 endif()
 
-set(IMGUI_DIR dependencies/imgui)
-set(IMGUI_SOURCES
-    ${IMGUI_DIR}/imgui.cpp
-    ${IMGUI_DIR}/imgui_demo.cpp
-    ${IMGUI_DIR}/imgui_draw.cpp
-    ${IMGUI_DIR}/imgui_tables.cpp
-    ${IMGUI_DIR}/imgui_widgets.cpp
-    ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
-    ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
-)
-
-
 add_executable(${PROJECT_NAME}
     dependencies/glad/src/gl.c
-    ${IMGUI_SOURCES}
     src/main.cpp
     src/Game.cpp
     src/utility/Shader.cpp
@@ -79,11 +64,13 @@ add_executable(${PROJECT_NAME}
 find_package(OpenGL REQUIRED)
 add_subdirectory(dependencies/glfw)
 add_subdirectory(dependencies/glm)
+add_subdirectory(dependencies/freetype)
 
 target_link_libraries(${PROJECT_NAME}
     OpenGL::GL
     glfw
     ${IRRKLANG_LIBRARY}
+    freetype
 )
 
 target_sources(${PROJECT_NAME} PRIVATE

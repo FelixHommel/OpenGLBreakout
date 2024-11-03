@@ -42,7 +42,7 @@ int main(int argc, char** argv)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    breakout.init(window);
+    breakout.init();
 
     float deltatime{ 0.f };
     float lastFrame{ 0.f };
@@ -67,10 +67,6 @@ int main(int argc, char** argv)
     }
 
     ResourceManager::clear();
-
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
 
     glfwDestroyWindow(window);
     glfwTerminate();

@@ -1,4 +1,6 @@
 #include "Game.hpp"
+#include "freetype/freetype.h"
+#include "imgui/imgui.h"
 
 Game::Game(unsigned int windowWidth, unsigned int windowHeight)
     : m_state{ GameState::GAME_ACTIVE }
@@ -11,6 +13,7 @@ Game::Game(unsigned int windowWidth, unsigned int windowHeight)
     , m_particles{ nullptr }
     , m_postProcessor{ nullptr }
     , m_soundEngine{ irrklang::createIrrKlangDevice() }
+    , m_ft{}
     , m_currentLevel{ 0 }
     , m_shakeTimer{ 0.f }
 {}
@@ -25,7 +28,7 @@ Game::~Game()
     delete m_renderer;
 }
 
-void Game::init(GLFWwindow* window)
+void Game::init()
 {
     ResourceManager::loadShader("resources/shaders/basic.vert", "resources/shaders/basic.frag", nullptr, "sprite"); 
 
@@ -66,12 +69,11 @@ void Game::init(GLFWwindow* window)
     ResourceManager::loadShader("resources/shaders/postProcessing.vert", "resources/shaders/postProcessing.frag", nullptr, "postProcessing");
     m_postProcessor = new PostProcessor(ResourceManager::getShader("postProcessing"), m_windowWidth, m_windowHeight);
 
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGui::StyleColorsDark();
-
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 330");
+    if(FT_Init_FreeType(&m_ft))
+    {
+        std::cerr << "Could not initialize freetype" << std::endl;
+        std::exit(1);
+    }
 }
 
 void Game::processInput(float dt)
@@ -127,13 +129,6 @@ void Game::update(float dt)
 
 void Game::render()
 {
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-
-    ImDrawList* drawList = ImGui::GetForegroundDrawList();
-    drawList->AddText(ImVec2(300, 300), IM_COL32(255, 255, 255, 255), "Free-floating Text");
-
     if(m_state == GameState::GAME_ACTIVE)
     {
         m_postProcessor->beginRender();
@@ -145,9 +140,6 @@ void Game::render()
         m_postProcessor->endRender();
         m_postProcessor->render(glfwGetTime());
     }
-
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void Game::resetLevel()
@@ -243,22 +235,4 @@ void Game::checkCollisions()
         m_ball->inverseVelocityY();
         m_ball->setVelocity(glm::normalize(m_ball->getVelocity()) * glm::length(oldVelocity));
     }
-}
-
-void Game::renderTransparentTextField(const char* label, char* buffer, size_t bufferSize)
-{
-    // Save the current style colors for frame background
-    ImVec4 prevColorBg = ImGui::GetStyle().Colors[ImGuiCol_FrameBg];
-    ImVec4 prevColorBgHovered = ImGui::GetStyle().Colors[ImGuiCol_FrameBgHovered];
-
-    // Set the background colors to transparent
-    ImGui::GetStyle().Colors[ImGuiCol_FrameBg] = ImVec4(0, 0, 0, 0);          // Transparent background
-    ImGui::GetStyle().Colors[ImGuiCol_FrameBgHovered] = ImVec4(0, 0, 0, 0);   // Transparent on hover
-
-    // Render the text field
-    ImGui::InputText(label, buffer, bufferSize);
-
-    // Restore the previous colors
-    ImGui::GetStyle().Colors[ImGuiCol_FrameBg] = prevColorBg;
-    ImGui::GetStyle().Colors[ImGuiCol_FrameBgHovered] = prevColorBgHovered;
 }
